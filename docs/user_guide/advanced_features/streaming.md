@@ -59,6 +59,7 @@ Set `stream=true` with `response_format=json` or `text`. The event sequence is:
 ```text
 transcript.text.delta  # zero or more incremental text fragments
 transcript.text.done   # complete transcript and optional duration usage
+[DONE]                 # terminal SSE sentinel
 ```
 
 Do not request `verbose_json` while streaming. Long-audio chunking and maximum

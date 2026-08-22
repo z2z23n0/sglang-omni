@@ -51,7 +51,8 @@ timestamps.
 Set `stream=true` with `response_format=json` or `text`. The server emits
 `transcript.text.delta` SSE events and finishes with a
 `transcript.text.done` event containing the complete text and duration usage
-when available. `verbose_json` is not a streaming response format.
+when available, followed by the `[DONE]` SSE sentinel. `verbose_json` is not a
+streaming response format.
 
 See [Streaming](../advanced_features/streaming.md) for the event contract and
 client guidance. A model may impose a shorter streaming duration limit than its

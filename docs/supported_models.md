@@ -23,6 +23,7 @@ unsupported.
 | Fish Audio S2-Pro | TTS | `/v1/audio/speech` | preprocessing → TTS engine → vocoder | Yes | Not yet recorded | Supported | [Fish Audio S2-Pro](./cookbook/fishaudio_s2_pro.md) |
 | Voxtral-4B-TTS | TTS | `/v1/audio/speech` | preprocessing → TTS generation → vocoder | Yes | 1× H200 | Performance qualified | [Voxtral TTS](./cookbook/voxtral_tts.md) |
 | Qwen3-TTS | TTS | `/v1/audio/speech` | preprocessing → TTS engine → vocoder | Partial | 1× H100 for the 1.7B Base CI configuration | CI tested | [Qwen3-TTS](./cookbook/qwen3_tts.md) |
+| Fun-CosyVoice3 | TTS | `/v1/audio/speech` | preprocessing → TTS engine → vocoder | No | Not yet recorded | Experimental | [Fun-CosyVoice3](./cookbook/fun_cosyvoice3.md) |
 | MOSS-TTS v1.5 | TTS | `/v1/audio/speech` | preprocessing → TTS engine → vocoder | Yes | RTX 4090 24 GB; 32 GB qualification profile; 1× H200 benchmark | Performance qualified | [MOSS-TTS](./cookbook/moss_tts.md) |
 | MOSS-TTS Local v1.5 | TTS | `/v1/audio/speech` | preprocessing → TTS engine → vocoder | Yes | 1× H100 per CI worker; 2× H100 benchmark | CI tested | [MOSS-TTS Local](./cookbook/moss_tts_local.md) |
 | Ming-Omni-TTS | TTS | `/v1/audio/speech` | preprocessing → reference encode → TTS engine → audio decode | No | 1× H200 | Performance qualified | [Ming-Omni-TTS](./cookbook/ming_tts.md) |
@@ -33,7 +34,7 @@ unsupported.
 | Fun-ASR-Nano | ASR | `/v1/audio/transcriptions` | audio preprocessing → ASR engine → response formatting | Yes | 1× H100 | CI tested | [Fun-ASR-Nano](./cookbook/fun_asr.md) |
 | ARK-ASR-3B | ASR | `/v1/audio/transcriptions` | audio preprocessing → ASR engine → response formatting | Yes | Not yet recorded | Supported | [ARK-ASR-3B](./cookbook/arkasr.md) |
 | MOSS-Transcribe-Diarize | ASR + diarization | `/v1/audio/transcriptions` | audio encoder → language model → structured transcript | Yes | 1× H100 | CI tested | [MOSS-Transcribe-Diarize](./cookbook/moss_transcribe_diarize.md) |
-| Whisper | ASR / translation | `/v1/audio/transcriptions`, `/v1/audio/translations` | audio preprocessing → ASR engine → response formatting | Yes | 1× H200 benchmark | Experimental | [Whisper ASR](./cookbook/whisper_asr.md) |
+| Whisper | ASR / translation | `/v1/audio/transcriptions`, `/v1/audio/translations` | audio preprocessing → ASR engine → response formatting | Yes | 1× H100 CI; 1× H200 benchmark | Experimental; CI tested | [Whisper ASR](./cookbook/whisper_asr.md) |
 | Qwen3-Omni | Omni | `/v1/chat/completions`, `/v1/realtime` | multimodal preprocessing/encoders → thinker → optional talker/code2wav | Yes | 1× H20, H100, or H200 colocated profiles | CI tested | [Qwen3-Omni](./cookbook/qwen3_omni.md) |
 | Ming-Omni | Omni | `/v1/chat/completions` | multimodal preprocessing/encoders → thinker → optional talker | Partial | 4× H100 thinker + 1× H100 talker | Performance qualified | [Ming-Omni](./cookbook/ming_omni.md) |
 | LLaDA2.0-Uni | Multimodal generation | `/v1/chat/completions` | preprocessing → image encoder → thinker → decode | No | Not yet recorded | Experimental | [LLaDA2.0-Uni](./cookbook/llada2_uni.md) |

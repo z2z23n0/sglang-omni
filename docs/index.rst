@@ -29,7 +29,6 @@ cookbook links.
 
    get_started/installation.md
    get_started/installation_xpu.md
-   get_started/release_notes.md
 
 
 .. toctree::
@@ -47,6 +46,7 @@ cookbook links.
    cookbook/voxtral_tts.md
    cookbook/fishaudio_s2_pro.md
    cookbook/qwen3_tts.md
+   cookbook/fun_cosyvoice3.md
    cookbook/ming_tts.md
    cookbook/moss_tts.md
    cookbook/moss_tts_local.md
@@ -90,6 +90,7 @@ cookbook links.
 
    user_guide/deployment/stage_placement.md
    basic_usage/tts_process_topology.md
+   basic_usage/process_topology_migration.md
 
 
 .. toctree::

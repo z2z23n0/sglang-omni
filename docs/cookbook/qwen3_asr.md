@@ -75,8 +75,11 @@ shared request fields, response formats, usage, and errors.
 
 ### Language hints
 
-When `language` is omitted, Qwen3-ASR detects the spoken language. You can pass
-a case-insensitive code or canonical name for these 30 languages:
+When `language` is omitted, Qwen3-ASR detects the spoken language before
+transcribing. Set an explicit hint when the language is known or automatic
+detection is unreliable for short or ambiguous audio.
+
+Qwen3-ASR accepts these 30 case-insensitive language codes and canonical names:
 
 | Codes | Canonical names |
 |---|---|
@@ -107,10 +110,23 @@ the non-chunked path.
 
 ### Streaming
 
-Streaming does not currently use long-audio chunking, so uploads above 1,200
-seconds return HTTP 400. Use non-streaming mode for longer files. See
-[Streaming](../user_guide/advanced_features/streaming.md) for the shared SSE
-event contract.
+Set `stream=true` to receive incremental transcript deltas over SSE:
+
+```bash
+curl -N -X POST http://localhost:8000/v1/audio/transcriptions \
+  -F model=Qwen/Qwen3-ASR-1.7B \
+  -F file=@tests/data/query_to_cars.wav \
+  -F language=en \
+  -F response_format=json \
+  -F stream=true
+```
+
+Qwen3-ASR batches deltas for up to 50 ms by default. EOS and other terminal
+conditions flush buffered text before the final transcript event. Streaming
+does not use long-audio chunking, so uploads above 1,200 seconds return HTTP
+400. Use non-streaming mode for longer files. See
+[Streaming](../user_guide/advanced_features/streaming.md) for the shared event
+and terminal-sentinel contract.
 
 ## Model-specific configuration
 
@@ -119,8 +135,11 @@ The default `auto` dtype follows the BF16 checkpoint configuration. Pass
 
 Async decode is enabled at every batch size. `--decode-mode sync` disables it;
 `--async-lookahead-min-batch-size` changes the crossover. Request building uses
-the shared prefill-admission gate with a target of 16 ready requests and a 40 ms
-maximum wait, releasing earlier when build work drains and decode is idle.
+eight workers and a pending-build depth of 32. When work exceeds the worker
+pool, builds finish asynchronously before scheduler admission; cache hits still
+skip mel extraction. The shared prefill-admission gate targets 16 ready
+requests with a 40 ms maximum wait, releasing earlier when build work drains
+and decode is idle.
 
 The default running-request limit is 64. On memory-constrained hardware, lower
 it explicitly; the validated RTX 4090 profile uses 16.
