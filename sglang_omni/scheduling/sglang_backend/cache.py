@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from sglang.srt.mem_cache.cache_init_params import CacheInitParams
-from sglang.srt.mem_cache.radix_cache import RadixCache
+from sglang_omni.scheduling.sglang_backend.evict_heap_radix_cache import (
+    EvictHeapRadixCache,
+)
 
 
 def create_tree_cache(
@@ -30,4 +32,4 @@ def create_tree_cache(
 
         return ChunkCache(params)
 
-    return RadixCache(params)
+    return EvictHeapRadixCache(params)
