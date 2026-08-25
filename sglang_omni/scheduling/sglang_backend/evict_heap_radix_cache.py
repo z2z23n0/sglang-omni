@@ -1,10 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""RadixCache variant with a persistent lazy min-heap over the evictable leaves.
-
-Pop-time validation is exact because every built-in eviction strategy's
-priority (LRU/LFU/FIFO) is non-decreasing in node-local state, so a stale
-entry is a lower bound and re-pushing a refreshed node preserves the order.
-"""
+"""A RadixCache whose eviction heap persists across evict() calls."""
 
 from __future__ import annotations
 
@@ -17,7 +12,6 @@ from sglang.srt.mem_cache.radix_cache import RadixCache, TreeNode
 
 class EvictHeapRadixCache(RadixCache):
     def __init__(self, params):
-        # note (Junnan Li): set before super().__init__, which calls reset().
         self._evict_heap: list = []
         self._evict_heap_seq = 0
         super().__init__(params)
@@ -54,7 +48,6 @@ class EvictHeapRadixCache(RadixCache):
         start_time = time.perf_counter()
         num_tokens = params.num_tokens
 
-        # note (Junnan Li): compact at 4x staleness so heap size stays O(leaves).
         if len(self._evict_heap) > max(1024, 4 * len(self.evictable_leaves)):
             self._evict_heap_rebuild()
 
