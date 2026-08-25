@@ -1,19 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""RadixCache with a persistent lazy eviction heap.
+"""RadixCache variant with a persistent lazy min-heap over the evictable leaves.
 
-Upstream ``RadixCache.evict`` rebuilds its eviction heap from every
-evictable leaf on each call (``list(...)`` + ``heapify``, O(L)). Under
-sustained load with few prefix hits the KV pool saturates, ``evict`` then
-fires on every allocation shortfall, and the scheduler thread spends its
-budget re-heapifying an ever-growing leaf set. This subclass keeps one
-min-heap alive across calls: push when a node becomes an evictable leaf,
-validate lazily at pop.
-
-Lazy validation is exact for eviction strategies whose priority is a
-non-decreasing function of node-local state (LRU/LFU/FIFO all qualify):
-a stale recorded priority is a lower bound on the current one, so the heap
-top never overtakes a fresher node and re-pushing refreshed nodes preserves
-the eviction order.
+Pop-time validation is exact because every built-in eviction strategy's
+priority (LRU/LFU/FIFO) is non-decreasing in node-local state, so a stale
+entry is a lower bound and re-pushing a refreshed node preserves the order.
 """
 
 from __future__ import annotations
@@ -27,7 +17,7 @@ from sglang.srt.mem_cache.radix_cache import RadixCache, TreeNode
 
 class EvictHeapRadixCache(RadixCache):
     def __init__(self, params):
-        # Before super().__init__: RadixCache.__init__ calls reset().
+        # note (Junnan Li): set before super().__init__, which calls reset().
         self._evict_heap: list = []
         self._evict_heap_seq = 0
         super().__init__(params)
@@ -64,12 +54,8 @@ class EvictHeapRadixCache(RadixCache):
         start_time = time.perf_counter()
         num_tokens = params.num_tokens
 
-        # Compact when stale entries dominate, so heap size stays O(leaves).
+        # note (Junnan Li): compact at 4x staleness so heap size stays O(leaves).
         if len(self._evict_heap) > max(1024, 4 * len(self.evictable_leaves)):
-            self._evict_heap_rebuild()
-        if not self._evict_heap and self.evictable_leaves:
-            # The push in _update_leaf_status should make this unreachable;
-            # rebuild rather than silently under-evict if it is ever violated.
             self._evict_heap_rebuild()
 
         num_evicted = 0
@@ -77,19 +63,15 @@ class EvictHeapRadixCache(RadixCache):
             priority, _seq, x = heapq.heappop(self._evict_heap)
 
             if x not in self.evictable_leaves:
-                # Stale: evicted earlier, locked, or no longer a leaf.
                 continue
             current_priority = self.eviction_strategy.get_priority(x)
             if current_priority != priority:
-                # Refreshed since push (priorities are non-decreasing):
-                # re-insert at the up-to-date priority and keep popping.
                 self._evict_heap_push(x)
                 continue
 
             self.token_to_kv_pool_allocator.free(x.value)
             num_evicted += len(x.value)
-            # _delete_leaf -> _update_leaf_status(parent) pushes the parent
-            # if it just became an evictable leaf.
+            # note (Junnan Li): _delete_leaf relands the parent via _update_leaf_status.
             self._delete_leaf(x)
             self._record_remove_event(x)
 

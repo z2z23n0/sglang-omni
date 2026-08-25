@@ -99,10 +99,19 @@ def test_heap_stays_bounded_and_recovers():
     assert not cache.evictable_leaves
 
 
-def test_reset_clears_heap():
+def test_reset_then_reuse():
     cache = _make(EvictHeapRadixCache)
-    key = RadixKey(token_ids=[5, 6, 7], extra_key="r")
-    cache.insert(InsertParams(key=key, value=torch.arange(3)))
-    assert cache._evict_heap
+    cache.insert(
+        InsertParams(
+            key=RadixKey(token_ids=[5, 6, 7], extra_key="r"), value=torch.arange(3)
+        )
+    )
     cache.reset()
-    assert not cache._evict_heap
+    cache.insert(
+        InsertParams(
+            key=RadixKey(token_ids=[8, 9], extra_key="r2"), value=torch.arange(2)
+        )
+    )
+    result = cache.evict(EvictParams(num_tokens=1 << 20))
+    assert result.num_tokens_evicted == 2
+    assert not cache.evictable_leaves
