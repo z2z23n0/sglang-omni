@@ -28,8 +28,7 @@ class _MockAllocator:
 
 
 def _make(cache_cls):
-    # RadixCache.create_simulated hardcodes the base class, so build the
-    # params directly to instantiate subclasses.
+    """Simulated-cache builder; create_simulated hardcodes RadixCache."""
     return cache_cls(
         CacheInitParams(
             disable=False,
