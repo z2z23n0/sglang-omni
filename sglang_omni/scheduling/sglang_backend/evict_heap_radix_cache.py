@@ -26,6 +26,8 @@ class EvictHeapRadixCache(RadixCache):
             self._evict_heap,
             (self.eviction_strategy.get_priority(node), self._evict_heap_seq, node),
         )
+        if len(self._evict_heap) > max(1024, 4 * len(self.evictable_leaves)):
+            self._evict_heap_rebuild()
 
     def _evict_heap_rebuild(self) -> None:
         self._evict_heap = [
@@ -47,9 +49,6 @@ class EvictHeapRadixCache(RadixCache):
 
         start_time = time.perf_counter()
         num_tokens = params.num_tokens
-
-        if len(self._evict_heap) > max(1024, 4 * len(self.evictable_leaves)):
-            self._evict_heap_rebuild()
 
         num_evicted = 0
         while num_evicted < num_tokens and self._evict_heap:

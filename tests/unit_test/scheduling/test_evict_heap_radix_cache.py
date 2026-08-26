@@ -40,12 +40,12 @@ def _make(cache_cls):
     )
 
 
-def _run_trace(cache, seed: int, steps: int = 4000) -> list[tuple[int, ...]]:
+def _run_trace(cache, seed: int, steps: int = 4000, drain: bool = True) -> list:
     """Drive an identical insert/lock/unlock/evict trace; return eviction order."""
     order = []
     orig_delete = cache._delete_leaf
     cache._delete_leaf = lambda node: (
-        order.append(tuple(node.key.token_ids)),
+        order.append((node.key.extra_key, tuple(node.key.token_ids))),
         orig_delete(node),
     )[1]
 
@@ -71,7 +71,8 @@ def _run_trace(cache, seed: int, steps: int = 4000) -> list[tuple[int, ...]]:
             cache.dec_lock_ref(locked.pop(rng.randrange(len(locked))))
         else:
             cache.evict(EvictParams(num_tokens=rng.randint(1, 40)))
-    cache.evict(EvictParams(num_tokens=1 << 20))
+    if drain:
+        cache.evict(EvictParams(num_tokens=1 << 20))
     return order
 
 
@@ -87,9 +88,10 @@ def test_eviction_trace_matches_stock():
 
 def test_heap_stays_bounded_and_recovers():
     cache = _make(EvictHeapRadixCache)
-    _run_trace(cache, seed=7, steps=2000)
-    # Post-evict, live entries are bounded by the compaction threshold.
+    _run_trace(cache, seed=7, steps=2000, drain=False)
+    assert cache.evictable_leaves
     assert len(cache._evict_heap) <= max(1024, 4 * len(cache.evictable_leaves))
+    cache.evict(EvictParams(num_tokens=1 << 20))
     # The cache keeps working after a full drain.
     key = RadixKey(token_ids=[1, 2, 3], extra_key="post")
     cache.insert(InsertParams(key=key, value=torch.arange(3)))
