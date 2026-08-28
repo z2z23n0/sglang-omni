@@ -27,7 +27,7 @@ class _MockAllocator:
         return 1 << 30
 
 
-def _make(cache_cls):
+def _make(cache_cls, eviction_policy="lru"):
     """Simulated-cache builder; create_simulated hardcodes RadixCache."""
     return cache_cls(
         CacheInitParams(
@@ -36,6 +36,7 @@ def _make(cache_cls):
             token_to_kv_pool_allocator=_MockAllocator(),
             page_size=1,
             enable_kv_cache_events=False,
+            eviction_policy=eviction_policy,
         )
     )
 
@@ -84,6 +85,24 @@ def test_eviction_trace_matches_stock():
         patched_order = _run_trace(patched, seed)
         assert patched_order == stock_order
         assert len(patched.evictable_leaves) == len(stock.evictable_leaves)
+
+
+def test_factory_selects_evict_heap_only_for_lru():
+    from types import SimpleNamespace
+
+    from sglang_omni.scheduling.sglang_backend.cache import create_tree_cache
+
+    def build(policy):
+        args = SimpleNamespace(
+            disable_radix_cache=False,
+            chunked_prefill_size=None,
+            radix_eviction_policy=policy,
+        )
+        return create_tree_cache(args, None, _MockAllocator(), 1)
+
+    assert type(build("lru")) is EvictHeapRadixCache
+    for policy in ("mru", "priority", "lfu", "fifo", "filo"):
+        assert type(build(policy)) is RadixCache, policy
 
 
 def test_heap_stays_bounded_and_recovers():

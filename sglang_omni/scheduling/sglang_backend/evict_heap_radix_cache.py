@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""A RadixCache whose eviction heap persists across evict() calls."""
+"""A RadixCache whose eviction heap persists across evict() calls.
+
+Order-equivalent to RadixCache for lru only; the factory falls back to
+RadixCache for other policies.
+"""
 
 from __future__ import annotations
 
